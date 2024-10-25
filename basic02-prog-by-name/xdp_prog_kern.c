@@ -40,3 +40,9 @@ enum xdp_action {
         XDP_REDIRECT,
 };
 */
+
+SEC("xdp_abort")
+int  xdp_drop_func(struct xdp_md *ctx)
+{
+	return XDP_ABORTED;
+}
