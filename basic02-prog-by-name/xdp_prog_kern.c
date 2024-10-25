@@ -42,7 +42,7 @@ enum xdp_action {
 */
 
 SEC("xdp_abort")
-int  xdp_drop_func(struct xdp_md *ctx)
+int  xdp_abort_func(struct xdp_md *ctx)
 {
 	return XDP_ABORTED;
 }
