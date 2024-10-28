@@ -121,13 +121,14 @@ static void stats_print(struct stats_record *stats_rec,
 	double pps; /* packets per sec */
 
 	/* Assignment#2: Print other XDP actions stats  */
+	for (__u32 _action = 0; _action < XDP_ACTION_MAX; _action++)
 	{
-		char *fmt = "%-12s %'11lld pkts (%'10.0f pps)"
+		char *fmt = "%-12s %'11lld pkts with bytes %d (%'10.0f pps)"
 			//" %'11lld Kbytes (%'6.0f Mbits/s)"
 			" period:%f\n";
-		const char *action = action2str(XDP_PASS);
-		rec  = &stats_rec->stats[0];
-		prev = &stats_prev->stats[0];
+		const char *action = action2str(_action);//action2str(XDP_PASS);
+		rec  = &stats_rec->stats[_action];
+		prev = &stats_prev->stats[_action];
 
 		period = calc_period(rec, prev);
 		if (period == 0)
@@ -135,9 +136,11 @@ static void stats_print(struct stats_record *stats_rec,
 
 		packets = rec->total.rx_packets - prev->total.rx_packets;
 		pps     = packets / period;
+		__u64 rx_bytes = rec->total.rx_bytes;
 
-		printf(fmt, action, rec->total.rx_packets, pps, period);
+		printf(fmt, action, rec->total.rx_packets, rx_bytes, pps, period);
 	}
+	printf("\n");
 }
 
 /* BPF_MAP_TYPE_ARRAY */
@@ -180,6 +183,8 @@ static bool map_collect(int fd, __u32 map_type, __u32 key, struct record *rec)
 	}
 
 	/* Assignment#1: Add byte counters */
+	rec->total.rx_bytes = value.rx_bytes;
+	/*END assignment*/
 	rec->total.rx_packets = value.rx_packets;
 	return true;
 }
@@ -188,9 +193,11 @@ static void stats_collect(int map_fd, __u32 map_type,
 			  struct stats_record *stats_rec)
 {
 	/* Assignment#2: Collect other XDP actions stats  */
-	__u32 key = XDP_PASS;
+	__u32 key;//XDP_PASS;
 
-	map_collect(map_fd, map_type, key, &stats_rec->stats[0]);
+	for (key = 0; key < XDP_ACTION_MAX; key++) {
+		map_collect(map_fd, map_type, key, &stats_rec->stats[key]);
+	}
 }
 
 static void stats_poll(int map_fd, __u32 map_type, int interval)
